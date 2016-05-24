@@ -6,5 +6,5 @@ default:
 dmd: benchmark.d
 	dmd -O -release -inline -noboundscheck $< && ./benchmark
 
-ldc: benchmark.d
-	ldc2 -O -release $< && ./benchmark
+ldc: benchmark.d my_searching.d
+	ldmd2 -O -release -inline -noboundscheck $^ && ./benchmark
