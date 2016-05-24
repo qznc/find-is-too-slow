@@ -30,9 +30,9 @@ outer:
         for(size_t j = i+1, k=1; k < needle.length; ++j, ++k)
             if (haystack[j] != needle[k])
                 continue outer;
-        break;
+        return haystack[i .. $];
     }
-    return haystack[i .. $];
+    return haystack[$ .. $];
 }
 
 void main()
