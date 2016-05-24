@@ -1,4 +1,6 @@
 import std.stdio;
+import std.random;
+import std.getopt;
 import std.datetime : benchmark, Duration;
 import std.conv : to;
 
@@ -20,11 +22,14 @@ outer:
     return haystack[$ .. $];
 }
 
-string generateHaystack(long n)
+immutable LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+string generate(long n, string alphabet)
 {
+    auto rnd = Xorshift(1337);
     string res;
     foreach(d; 0..n) {
-        res ~= "ab";
+        res ~= alphabet[uniform(0,$,rnd)];
     }
     return res;
 }
@@ -32,15 +37,26 @@ string generateHaystack(long n)
 void main(string[] args)
 {
     long haystack_length = 200;
+    long needle_length = 3;
     uint iterations = 100_000;
-    string needle = "aaa";
-    if (args.length > 1)
-        haystack_length = to!long(args[1]);
-    if (args.length > 2)
-        iterations = to!uint(args[2]);
-    if (args.length > 3)
-        needle = "bbb";
-    string haystack = generateHaystack(haystack_length);
+    bool show = false;
+    auto helpInformation = getopt(args,
+        "haystack-length|l","length of the random haystack",&haystack_length,
+        "needle-length|n"  ,"length of the random needle"  ,&needle_length,
+        "iterations|i"     ,"number of iterations per run" ,&iterations,
+        "show"             ,"show needle and haystack", &show,
+    );
+    if (helpInformation.helpWanted)
+    {
+        writef("Benchmark usage: %s { -switch }", args[0]);
+        defaultGetoptPrinter("",
+                helpInformation.options);
+        return;
+    }
+    string haystack = generate(haystack_length, LETTERS);
+    string needle   = generate(needle_length, "abc");
+
+    // actual benchmarking
     size_t i1, i2, i3;
     auto res = benchmark!({
         import std.algorithm : find;
@@ -54,9 +70,16 @@ void main(string[] args)
         auto f = find(haystack, needle);
         i3 = haystack.length - f.length;
     })(iterations);
+
+    if (show) {
+        writeln("Haystack: ", haystack);
+        writeln("Needle: ", needle);
+    }
+
     { // Correctness check
         import std.algorithm : find;
         size_t correct_i = haystack.length - find(haystack, needle).length;
+        writefln("Found at %d", correct_i);
         if (i1 != correct_i) {
             writefln("E: std find wrong");
         }
