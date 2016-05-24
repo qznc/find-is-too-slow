@@ -1,10 +1,18 @@
-.PHONY: dmd ldc
+.PHONY: default dmd ldc
 
 default:
 	echo "Run benchmark via 'dmd' or 'ldc' goals"
 
-dmd: benchmark.d
-	dmd -O -release -inline -noboundscheck $< && ./benchmark
+# Building
+benchmark.dmd: benchmark.d my_searching.d Makefile
+	dmd -O -release -inline -noboundscheck *.d -of$@
 
-ldc: benchmark.d my_searching.d
-	ldmd2 -O -release -inline -noboundscheck $^ && ./benchmark
+benchmark.ldc: benchmark.d my_searching.d Makefile
+	ldmd2 -O -release -inline -noboundscheck *.d -of$@
+
+# Running
+dmd: benchmark.dmd
+	./$<
+
+ldc: benchmark.ldc
+	./$<
