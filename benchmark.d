@@ -81,13 +81,19 @@ void main(string[] args)
         auto correct_r = find(haystack, needle);
         writefln("Found at %d", haystack.length - correct_r.length);
         if (r1 != correct_r) {
-            writefln("E: std find wrong");
+            writeln("E: std find wrong");
+            writeln("Correct: ", correct_r);
+            writeln("Wrong: ", r1);
         }
         if (r2 != correct_r) {
-            writefln("E: manual find wrong");
+            writeln("E: manual find wrong");
+            writeln("Correct: ", correct_r);
+            writeln("Wrong: ", r2);
         }
         if (r3 != correct_r) {
-            writefln("E: my std find wrong");
+            writeln("E: my std find wrong");
+            writeln("Correct: ", correct_r);
+            writeln("Wrong: ", r3);
         }
     }
     writefln("std find    took %12d", res[0].length);
