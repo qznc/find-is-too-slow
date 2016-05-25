@@ -1775,7 +1775,11 @@ if (isRandomAccessRange!R1 && isBidirectionalRange!R2
         && is(typeof(binaryFun!pred(haystack.front, needle.front)) : bool))
 {
     if (needle.empty) return haystack;
-    const needleLength = walkLength(needle.save);
+    static if (isRandomAccessRange!R2) {
+        const needleLength = walkLength(needle.save);
+    } else {
+        const needleLength = needle.length;
+    }
     if (needleLength > haystack.length)
     {
         return haystack[$ .. $];
@@ -1792,6 +1796,7 @@ if (isRandomAccessRange!R1 && isBidirectionalRange!R2
     }
     // Stage 2: linear find
     size_t scout = needleLength - 1;
+outer:
     for (;;)
     {
         if (scout >= haystack.length)
@@ -1804,15 +1809,28 @@ if (isRandomAccessRange!R1 && isBidirectionalRange!R2
             continue;
         }
         // Found a match with the last element in the needle
-        auto cand = haystack[scout + 1 - needleLength .. haystack.length];
-        if (startsWith!pred(cand, needle))
-        {
+        static if (isRandomAccessRange!R2) {
+            for(size_t j = scout+1-needleLength, k = 0; k < needleLength-1; ++j, ++k) {
+                if (!binaryFun!pred(haystack[j], needle[k])) {
+                    scout += step;
+                    continue outer;
+                }
+            }
             // found
-            return cand;
+            return haystack[scout + 1 - needleLength .. $];
+        } else {
+            auto cand = haystack[scout + 1 - needleLength .. $];
+            // This intermediate creation of a slice is why the
+            // random access variant above is faster.
+            if (startsWith!pred(cand, needle))
+            {
+                // found
+                return cand;
+            }
+            scout += step;
         }
-        // Continue with the stride
-        scout += step;
     }
+    assert(0);
 }
 
 @safe unittest
