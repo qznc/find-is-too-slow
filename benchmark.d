@@ -22,7 +22,8 @@ outer:
     return haystack[$ .. $];
 }
 
-immutable LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+immutable LETTERS = "abcd"; // Current goal is highlighted be few letters
+immutable NEEDLE_LETTERS = "abc";
 
 string generate(long n, string alphabet, uint seed)
 {
@@ -56,7 +57,7 @@ void main(string[] args)
         return;
     }
     string haystack = generate(haystack_length, alphabet, 11);
-    string needle   = generate(needle_length, "abc", 42);
+    string needle   = generate(needle_length, NEEDLE_LETTERS, 42);
 
     // actual benchmarking
     string r1, r2, r3;
