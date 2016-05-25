@@ -40,10 +40,12 @@ void main(string[] args)
     long needle_length = 3;
     uint iterations = 100_000;
     bool show = false;
+    string alphabet = LETTERS;
     auto helpInformation = getopt(args,
         "haystack-length|l","length of the random haystack",&haystack_length,
         "needle-length|n"  ,"length of the random needle"  ,&needle_length,
         "iterations|i"     ,"number of iterations per run" ,&iterations,
+        "alphabet"         ,"characters for the haystack" ,&alphabet,
         "show"             ,"show needle and haystack", &show,
     );
     if (helpInformation.helpWanted)
@@ -53,7 +55,7 @@ void main(string[] args)
                 helpInformation.options);
         return;
     }
-    string haystack = generate(haystack_length, LETTERS);
+    string haystack = generate(haystack_length, alphabet);
     string needle   = generate(needle_length, "abc");
 
     // actual benchmarking
