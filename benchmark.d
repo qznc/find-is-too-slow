@@ -24,9 +24,9 @@ outer:
 
 immutable LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-string generate(long n, string alphabet)
+string generate(long n, string alphabet, uint seed)
 {
-    auto rnd = Xorshift(1337);
+    auto rnd = Xorshift(seed);
     string res;
     foreach(d; 0..n) {
         res ~= alphabet[uniform(0,$,rnd)];
@@ -55,8 +55,8 @@ void main(string[] args)
                 helpInformation.options);
         return;
     }
-    string haystack = generate(haystack_length, alphabet);
-    string needle   = generate(needle_length, "abc");
+    string haystack = generate(haystack_length, alphabet, 11);
+    string needle   = generate(needle_length, "abc", 42);
 
     // actual benchmarking
     size_t i1, i2, i3;
