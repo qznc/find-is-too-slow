@@ -59,18 +59,15 @@ void main(string[] args)
     string needle   = generate(needle_length, "abc", 42);
 
     // actual benchmarking
-    size_t i1, i2, i3;
+    string r1, r2, r3;
     auto res = benchmark!({
         import std.algorithm : find;
-        auto f = find(haystack, needle);
-        i1 = haystack.length - f.length;
+        r1 = find(haystack, needle);
     },{
-        auto f = manual_find(haystack, needle);
-        i2 = haystack.length - f.length;
+        r2 = manual_find(haystack, needle);
     },{
         import my_searching : find;
-        auto f = find(haystack, needle);
-        i3 = haystack.length - f.length;
+        r3 = find(haystack, needle);
     })(iterations);
 
     if (show) {
@@ -80,15 +77,15 @@ void main(string[] args)
 
     { // Correctness check
         import std.algorithm : find;
-        size_t correct_i = haystack.length - find(haystack, needle).length;
-        writefln("Found at %d", correct_i);
-        if (i1 != correct_i) {
+        auto correct_r = find(haystack, needle);
+        writefln("Found at %d", haystack.length - correct_r.length);
+        if (r1 != correct_r) {
             writefln("E: std find wrong");
         }
-        if (i2 != correct_i) {
+        if (r2 != correct_r) {
             writefln("E: manual find wrong");
         }
-        if (i3 != correct_i) {
+        if (r3 != correct_r) {
             writefln("E: my std find wrong");
         }
     }
