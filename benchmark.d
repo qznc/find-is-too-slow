@@ -5,12 +5,13 @@ import std.datetime : benchmark, Duration;
 import std.conv : to;
 import std.algorithm : sum, min;
 import std.math : abs;
+import std.array;
 
 string manual_find(string haystack, string needle) {
     size_t i=0;
     if (needle.length > haystack.length)
         return haystack[$ .. $];
-    size_t end = haystack.length - needle.length;
+    size_t end = haystack.length - needle.length + 1;
 outer:
     for(; i < end; i++)
     {
