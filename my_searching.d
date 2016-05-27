@@ -1792,9 +1792,9 @@ if (isRandomAccessRange!R1 && isBidirectionalRange!R2
     // Stage 1: find the step
     size_t step = 1;
     auto needleBack = needle.back;
-    needle.popBack();
-    for (auto i = needle.save; !i.empty && i.back != needleBack;
-         i.popBack(), ++step)
+    auto i = needle.save;
+    i.popBack();
+    for (; !i.empty && i.back != needleBack; i.popBack(), ++step)
     {
     }
     // Stage 2: linear find
@@ -1812,14 +1812,21 @@ outer:
         // Found a match with the last element in the needle
         static if (isRandomAccessRange!R2)
         {
-            for (size_t j = scout + 1 - needleLength, k = 0; k < needleLength - 1; ++j, ++k)
+            haystack[scout] = cast(typeof(needleBack)) (needleBack+1);
+            for (size_t j = scout + 1 - needleLength, k = 0;; ++j, ++k)
             {
                 if (!binaryFun!pred(haystack[j], needle[k]))
                 {
-                    scout += step;
-                    continue outer;
+                    if (j == scout) {
+                        break;
+                    } else {
+                        haystack[scout] = needleBack;
+                        scout += step;
+                        continue outer;
+                    }
                 }
             }
+            haystack[scout] = needleBack;
             // found
             return haystack[scout + 1 - needleLength .. haystack.length];
         }
