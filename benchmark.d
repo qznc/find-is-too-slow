@@ -89,21 +89,33 @@ auto singleRun(int seed)
             writeln("E: std find wrong");
             writeln("Correct: ", correct_r);
             writeln("Wrong: ", r1);
+            writeln("Haystack: ", haystack);
+            writeln("Needle: ", needle);
+            assert (false);
         }
         if (r2 != correct_r) {
             writeln("E: manual find wrong");
             writeln("Correct: ", correct_r);
             writeln("Wrong: ", r2);
+            writeln("Haystack: ", haystack);
+            writeln("Needle: ", needle);
+            assert (false);
         }
         if (r3 != correct_r) {
             writeln("E: my std find wrong");
             writeln("Correct: ", correct_r);
             writeln("Wrong: ", r3);
+            writeln("Haystack: ", haystack);
+            writeln("Needle: ", needle);
+            assert (false);
         }
         if (r4 != correct_r) {
             writeln("E: manual2 find wrong");
             writeln("Correct: ", correct_r);
-            writeln("Wrong: ", r3);
+            writeln("Wrong: ", r4);
+            writeln("Haystack: ", haystack);
+            writeln("Needle: ", needle);
+            assert (false);
         }
     }
     //writeln(res);
