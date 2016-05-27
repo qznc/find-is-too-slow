@@ -1812,9 +1812,10 @@ outer:
         // Found a match with the last element in the needle
         static if (isRandomAccessRange!R2)
         {
-            for (size_t j = scout + 1 - needleLength, k = 0; k < needleLength - 1; ++j, ++k)
+            immutable h_base = scout + 1 - needleLength;
+            for (size_t k = 0; k < needleLength - 1; ++k)
             {
-                if (!binaryFun!pred(haystack[j], needle[k]))
+                if (!binaryFun!pred(haystack[h_base+k], needle[k]))
                 {
                     scout += step;
                     continue outer;
