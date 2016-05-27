@@ -24,6 +24,23 @@ outer:
     return haystack[$ .. $];
 }
 
+string findStringS_Manual(string haystack, string needle)
+{
+    if (needle.length > haystack.length)
+        return haystack[$..$];
+outer:
+    for (auto i = 0; i < haystack.length; i++)
+    {
+        if (haystack[i] != needle[0])
+            continue;
+        for (size_t j = (i+1 < haystack.length) ? i+1 : i, k = 1; k < needle.length; ++j, ++k)
+            if (haystack[j] != needle[k])
+                continue outer;
+        return haystack[i..$];
+    }
+    return haystack[$..$];
+}
+
 immutable LETTERS = "abcdefghijklmnopqrstuvwxyz";
 immutable NEEDLE_LETTERS = "abc";
 
@@ -50,7 +67,7 @@ auto singleRun(int seed)
     //writefln("RUN h=%d n=%d a=%d", haystack_length, needle_length, alphabet_length);
 
     // actual benchmarking
-    string r1, r2, r3;
+    string r1, r2, r3, r4;
     auto res = benchmark!({
         import std.algorithm : find;
         r1 = find(haystack, needle);
@@ -59,6 +76,8 @@ auto singleRun(int seed)
     },{
         import my_searching : find;
         r3 = find(haystack, needle);
+    },{
+        r4 = findStringS_Manual(haystack, needle);
     })(1);
 
     { // Correctness check
@@ -80,15 +99,21 @@ auto singleRun(int seed)
             writeln("Correct: ", correct_r);
             writeln("Wrong: ", r3);
         }
+        if (r4 != correct_r) {
+            writeln("E: manual2 find wrong");
+            writeln("Correct: ", correct_r);
+            writeln("Wrong: ", r3);
+        }
     }
     //writeln(res);
 
     // normalize
-    auto m = min(min(res[0].length, res[1].length), res[2].length);
+    auto m = min(res[0].length, res[1].length, res[2].length, res[3].length);
     return [
         100 * res[0].length / m,
         100 * res[1].length / m,
-        100 * res[2].length / m];
+        100 * res[2].length / m,
+        100 * res[3].length / m];
 }
 
 void manyRuns(long n)
@@ -127,7 +152,8 @@ void manyRuns(long n)
     // print
     writefln("std find:    %3d ±%d", averages[0], mads[0]);
     writefln("manual find: %3d ±%d", averages[1], mads[1]);
-    writefln("my std find: %3d ±%d", averages[2], mads[2]);
+    writefln("qznc find:   %3d ±%d", averages[2], mads[2]);
+    writefln("Chris find:  %3d ±%d", averages[3], mads[3]);
     writeln(" (avg slowdown vs fastest; absolute deviation)");
 }
 
