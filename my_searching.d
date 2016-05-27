@@ -1775,14 +1775,17 @@ if (isRandomAccessRange!R1 && isBidirectionalRange!R2
         && is(typeof(binaryFun!pred(haystack.front, needle.front)) : bool))
 {
     if (needle.empty) return haystack;
-    static if (isRandomAccessRange!R2) {
-        const needleLength = walkLength(needle.save);
-    } else {
-        const needleLength = needle.length;
+    static if (hasLength!R2)
+    {
+        immutable needleLength = needle.length;
+    }
+    else
+    {
+        immutable needleLength = walkLength(needle.save);
     }
     if (needleLength > haystack.length)
     {
-        return haystack[$ .. $];
+        return haystack[haystack.length .. haystack.length];
     }
     // @@@BUG@@@
     // auto needleBack = moveBack(needle);
@@ -1800,26 +1803,29 @@ outer:
     for (;;)
     {
         if (scout >= haystack.length)
-        {
-            return haystack[haystack.length .. haystack.length];
-        }
+            break;
         if (!binaryFun!pred(haystack[scout], needleBack))
         {
             ++scout;
             continue;
         }
         // Found a match with the last element in the needle
-        static if (isRandomAccessRange!R2) {
-            for(size_t j = scout+1-needleLength, k = 0; k < needleLength-1; ++j, ++k) {
-                if (!binaryFun!pred(haystack[j], needle[k])) {
+        static if (isRandomAccessRange!R2)
+        {
+            for (size_t j = scout + 1 - needleLength, k = 0; k < needleLength - 1; ++j, ++k)
+            {
+                if (!binaryFun!pred(haystack[j], needle[k]))
+                {
                     scout += step;
                     continue outer;
                 }
             }
             // found
-            return haystack[scout + 1 - needleLength .. $];
-        } else {
-            auto cand = haystack[scout + 1 - needleLength .. $];
+            return haystack[scout + 1 - needleLength .. haystack.length];
+        }
+        else
+        {
+            auto cand = haystack[scout + 1 - needleLength .. haystack.length];
             // This intermediate creation of a slice is why the
             // random access variant above is faster.
             if (startsWith!pred(cand, needle))
@@ -1830,7 +1836,7 @@ outer:
             scout += step;
         }
     }
-    assert(0);
+    return haystack[haystack.length .. haystack.length];
 }
 
 @safe unittest
