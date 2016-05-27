@@ -3,6 +3,8 @@ import std.random;
 import std.getopt;
 import std.datetime : benchmark, Duration;
 import std.conv : to;
+import std.algorithm : sum, min;
+import std.math : abs;
 
 string manual_find(string haystack, string needle) {
     size_t i=0;
@@ -22,7 +24,7 @@ outer:
     return haystack[$ .. $];
 }
 
-immutable LETTERS = "abcd"; // Current goal is highlighted be few letters
+immutable LETTERS = "abcdefghijklmnopqrstuvwxyz";
 immutable NEEDLE_LETTERS = "abc";
 
 string generate(long n, string alphabet, uint seed)
@@ -35,29 +37,17 @@ string generate(long n, string alphabet, uint seed)
     return res;
 }
 
-void main(string[] args)
+auto singleRun(int seed)
 {
-    long haystack_length = 200;
-    long needle_length = 3;
-    uint iterations = 100_000;
-    bool show = false;
-    string alphabet = LETTERS;
-    auto helpInformation = getopt(args,
-        "haystack-length|l","length of the random haystack",&haystack_length,
-        "needle-length|n"  ,"length of the random needle"  ,&needle_length,
-        "iterations|i"     ,"number of iterations per run" ,&iterations,
-        "alphabet"         ,"characters for the haystack" ,&alphabet,
-        "show"             ,"show needle and haystack", &show,
-    );
-    if (helpInformation.helpWanted)
-    {
-        writef("Benchmark usage: %s { -switch }", args[0]);
-        defaultGetoptPrinter("",
-                helpInformation.options);
-        return;
-    }
-    string haystack = generate(haystack_length, alphabet, 11);
-    string needle   = generate(needle_length, NEEDLE_LETTERS, 42);
+    auto rnd = Random(seed);
+    auto haystack_length = uniform(10,10000,rnd);
+    auto needle_length = uniform(2,20,rnd);
+    auto alphabet_length = uniform(1, LETTERS.length, rnd);
+    auto alphabet = LETTERS[0 .. alphabet_length];
+    string haystack = generate(haystack_length, alphabet, rnd.front);
+    rnd.popFront();
+    string needle   = generate(needle_length, NEEDLE_LETTERS, rnd.front);
+    //writefln("RUN h=%d n=%d a=%d", haystack_length, needle_length, alphabet_length);
 
     // actual benchmarking
     string r1, r2, r3;
@@ -69,17 +59,12 @@ void main(string[] args)
     },{
         import my_searching : find;
         r3 = find(haystack, needle);
-    })(iterations);
-
-    if (show) {
-        writeln("Haystack: ", haystack);
-        writeln("Needle: ", needle);
-    }
+    })(1);
 
     { // Correctness check
         import std.algorithm : find;
         auto correct_r = find(haystack, needle);
-        writefln("Found at %d", haystack.length - correct_r.length);
+        //writefln("Found at %d", haystack.length - correct_r.length);
         if (r1 != correct_r) {
             writeln("E: std find wrong");
             writeln("Correct: ", correct_r);
@@ -96,7 +81,69 @@ void main(string[] args)
             writeln("Wrong: ", r3);
         }
     }
-    writefln("std find    took %12d", res[0].length);
-    writefln("manual find took %12d", res[1].length);
-    writefln("my std find took %12d", res[2].length);
+    //writeln(res);
+
+    // normalize
+    auto m = min(min(res[0].length, res[1].length), res[2].length);
+    return [
+        100 * res[0].length / m,
+        100 * res[1].length / m,
+        100 * res[2].length / m];
+}
+
+void manyRuns(long n)
+{
+    // measure
+    auto rnd = Random();
+    long[][] results;
+    foreach(i; 0..n) {
+        auto res = singleRun(rnd.front);
+        //writeln(res);
+        rnd.popFront();
+        results.length = res.length;
+        foreach (j; 0 .. res.length) {
+            results[j] ~= res[j];
+        }
+    }
+
+    // averages
+    long[] averages;
+    foreach(i; 0..results.length) {
+        averages ~= results[i].sum / results[i].length;
+    }
+
+    // MADs
+    long[] mads;
+    foreach(i; 0..results.length) {
+        long mad;
+        long avg = averages[i];
+        foreach(x; results[i]) {
+            mad += abs(x - avg);
+        }
+        mad /= results[i].length;
+        mads ~= mad;
+    }
+
+    // print
+    writefln("std find:    %3d ±%d", averages[0], mads[0]);
+    writefln("manual find: %3d ±%d", averages[1], mads[1]);
+    writefln("my std find: %3d ±%d", averages[2], mads[2]);
+    writeln(" (avg slowdown vs fastest; absolute deviation)");
+}
+
+void main(string[] args)
+{
+    uint iterations = 10000;
+    auto helpInformation = getopt(args,
+        "iterations|i"     ,"number of iterations per run" ,&iterations,
+    );
+    if (helpInformation.helpWanted)
+    {
+        writef("Benchmark usage: %s { -switch }", args[0]);
+        defaultGetoptPrinter("",
+                helpInformation.options);
+        return;
+    }
+
+    manyRuns(iterations);
 }
