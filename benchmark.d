@@ -10,6 +10,8 @@ import std.array;
 bool halt_on_error = false;
 bool verbose_errors = false;
 
+string[] names = ["std find", "manual find", "qznc find", "Chris find", "Andrei find"];
+
 string manual_find(string haystack, string needle) {
     size_t i=0;
     if (needle.length > haystack.length)
@@ -45,6 +47,27 @@ outer:
     return haystack[$..$];
 }
 
+T[] andrei_find(T)(T[] haystack, T[] needle)
+{
+    if (needle.length == 0) return haystack;
+    immutable lastIndex = needle.length - 1;
+    auto last = needle[lastIndex];
+    size_t j = lastIndex;
+    for (; j < haystack.length; ++j)
+    {
+        if (haystack[j] != last) continue;
+        immutable k = j - lastIndex;
+        // last elements match
+        for (size_t i = 0; ; ++i)
+        {
+            if (i == lastIndex) return haystack[k .. $];
+            if (needle[i] != haystack[k + i]) break;
+        }
+    }
+    return haystack[$ .. $];
+}
+
+
 immutable LETTERS = "abcdefghijklmnopqrstuvwxyz";
 immutable NEEDLE_LETTERS = "abc";
 
@@ -71,61 +94,32 @@ auto singleRun(int seed)
     //writefln("RUN h=%d n=%d a=%d", haystack_length, needle_length, alphabet_length);
 
     // actual benchmarking
-    string r1, r2, r3, r4;
+    string[] results;
     auto res = benchmark!({
         import std.algorithm : find;
-        r1 = find(haystack, needle);
+        results ~= find(haystack, needle);
     },{
-        r2 = manual_find(haystack, needle);
+        results ~= manual_find(haystack, needle);
     },{
         import my_searching : find;
-        r3 = find(haystack, needle);
+        results ~= find(haystack, needle);
     },{
-        r4 = findStringS_Manual(haystack, needle);
+        results ~= findStringS_Manual(haystack, needle);
+    },{
+        results ~= andrei_find(haystack, needle);
     })(1);
 
     { // Correctness check
         import std.algorithm : find;
         auto correct_r = find(haystack, needle);
         //writefln("Found at %d", haystack.length - correct_r.length);
-        if (r1 != correct_r) {
-            writeln("E: std find wrong");
+        foreach(i, r; results) {
+            if (r == correct_r)
+                continue;
+            writeln("E: wrong result with ", names[i]);
             if (verbose_errors) {
                 writeln("Correct: ", correct_r);
-                writeln("Wrong: ", r1);
-                writeln("Haystack: ", haystack);
-                writeln("Needle: ", needle);
-            }
-            if (halt_on_error)
-                assert (false);
-        }
-        if (r2 != correct_r) {
-            writeln("E: manual find wrong");
-            if (verbose_errors) {
-                writeln("Correct: ", correct_r);
-                writeln("Wrong: ", r2);
-                writeln("Haystack: ", haystack);
-                writeln("Needle: ", needle);
-            }
-            if (halt_on_error)
-                assert (false);
-        }
-        if (r3 != correct_r) {
-            writeln("E: qznc find wrong");
-            if (verbose_errors) {
-                writeln("Correct: ", correct_r);
-                writeln("Wrong: ", r3);
-                writeln("Haystack: ", haystack);
-                writeln("Needle: ", needle);
-            }
-            if (halt_on_error)
-                assert (false);
-        }
-        if (r4 != correct_r) {
-            writeln("E: Chris find wrong");
-            if (verbose_errors) {
-                writeln("Correct: ", correct_r);
-                writeln("Wrong: ", r4);
+                writeln("Wrong: ", r);
                 writeln("Haystack: ", haystack);
                 writeln("Needle: ", needle);
             }
@@ -133,7 +127,6 @@ auto singleRun(int seed)
                 assert (false);
         }
     }
-    //writeln(res);
 
     // normalize
     auto m = min(res[0].length, res[1].length, res[2].length, res[3].length);
@@ -141,7 +134,8 @@ auto singleRun(int seed)
         100 * res[0].length / m,
         100 * res[1].length / m,
         100 * res[2].length / m,
-        100 * res[3].length / m];
+        100 * res[3].length / m,
+        100 * res[4].length / m];
 }
 
 void manyRuns(long n)
@@ -178,10 +172,9 @@ void manyRuns(long n)
     }
 
     // print
-    writefln("std find:    %3d ±%d", averages[0], mads[0]);
-    writefln("manual find: %3d ±%d", averages[1], mads[1]);
-    writefln("qznc find:   %3d ±%d", averages[2], mads[2]);
-    writefln("Chris find:  %3d ±%d", averages[3], mads[3]);
+    foreach(i; 0 .. averages.length) {
+        writefln("%12s:\t%3d ±%d", names[i], averages[i], mads[i]);
+    }
     writeln(" (avg slowdown vs fastest; absolute deviation)");
 }
 
