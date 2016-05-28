@@ -7,6 +7,9 @@ import std.algorithm : sum, min;
 import std.math : abs;
 import std.array;
 
+bool halt_on_error = false;
+bool verbose_errors = false;
+
 string manual_find(string haystack, string needle) {
     size_t i=0;
     if (needle.length > haystack.length)
@@ -87,35 +90,47 @@ auto singleRun(int seed)
         //writefln("Found at %d", haystack.length - correct_r.length);
         if (r1 != correct_r) {
             writeln("E: std find wrong");
-            writeln("Correct: ", correct_r);
-            writeln("Wrong: ", r1);
-            writeln("Haystack: ", haystack);
-            writeln("Needle: ", needle);
-            assert (false);
+            if (verbose_errors) {
+                writeln("Correct: ", correct_r);
+                writeln("Wrong: ", r1);
+                writeln("Haystack: ", haystack);
+                writeln("Needle: ", needle);
+            }
+            if (halt_on_error)
+                assert (false);
         }
         if (r2 != correct_r) {
             writeln("E: manual find wrong");
-            writeln("Correct: ", correct_r);
-            writeln("Wrong: ", r2);
-            writeln("Haystack: ", haystack);
-            writeln("Needle: ", needle);
-            assert (false);
+            if (verbose_errors) {
+                writeln("Correct: ", correct_r);
+                writeln("Wrong: ", r2);
+                writeln("Haystack: ", haystack);
+                writeln("Needle: ", needle);
+            }
+            if (halt_on_error)
+                assert (false);
         }
         if (r3 != correct_r) {
-            writeln("E: my std find wrong");
-            writeln("Correct: ", correct_r);
-            writeln("Wrong: ", r3);
-            writeln("Haystack: ", haystack);
-            writeln("Needle: ", needle);
-            assert (false);
+            writeln("E: qznc find wrong");
+            if (verbose_errors) {
+                writeln("Correct: ", correct_r);
+                writeln("Wrong: ", r3);
+                writeln("Haystack: ", haystack);
+                writeln("Needle: ", needle);
+            }
+            if (halt_on_error)
+                assert (false);
         }
         if (r4 != correct_r) {
-            writeln("E: manual2 find wrong");
-            writeln("Correct: ", correct_r);
-            writeln("Wrong: ", r4);
-            writeln("Haystack: ", haystack);
-            writeln("Needle: ", needle);
-            assert (false);
+            writeln("E: Chris find wrong");
+            if (verbose_errors) {
+                writeln("Correct: ", correct_r);
+                writeln("Wrong: ", r4);
+                writeln("Haystack: ", haystack);
+                writeln("Needle: ", needle);
+            }
+            if (halt_on_error)
+                assert (false);
         }
     }
     //writeln(res);
@@ -174,7 +189,9 @@ void main(string[] args)
 {
     uint iterations = 10000;
     auto helpInformation = getopt(args,
-        "iterations|i"     ,"number of iterations per run" ,&iterations,
+        "iterations|i"  ,"number of iterations per run" ,&iterations,
+        "halt-on-error" ,"stop benchmarking if any result is wrong" ,&halt_on_error,
+        "verbose-errors","show some debugging output if any result is wrong" ,&verbose_errors,
     );
     if (helpInformation.helpWanted)
     {
