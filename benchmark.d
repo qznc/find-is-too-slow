@@ -69,7 +69,6 @@ T[] andrei_find(T)(T[] haystack, T[] needle)
 
 
 immutable LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-immutable NEEDLE_LETTERS = "abcdefghijk";
 
 string generate(long n, string alphabet, uint seed)
 {
@@ -85,11 +84,11 @@ auto singleRun(int seed)
 {
     auto rnd = Random(seed);
     auto haystack_length = uniform(10,10000,rnd);
-    auto needle_length = uniform(2,20,rnd);
-    auto alphabet_length = uniform(1, LETTERS.length, rnd);
-    auto needle_alphabet_length = uniform(1, NEEDLE_LETTERS.length, rnd);
-    auto alphabet = LETTERS[0 .. alphabet_length];
-    auto needle_alphabet = NEEDLE_LETTERS[0 .. needle_alphabet_length];
+    auto needle_length = uniform(2,30,rnd);
+    auto haystack_alphabet_length = uniform(1, LETTERS.length, rnd);
+    auto needle_alphabet_length = uniform(1, LETTERS.length, rnd);
+    auto alphabet = LETTERS[0 .. haystack_alphabet_length];
+    auto needle_alphabet = LETTERS[0 .. needle_alphabet_length];
     string haystack = generate(haystack_length, alphabet, rnd.front);
     rnd.popFront();
     string needle   = generate(needle_length, needle_alphabet, rnd.front);
