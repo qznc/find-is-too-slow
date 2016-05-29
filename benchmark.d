@@ -35,16 +35,16 @@ string findStringS_Manual(string haystack, string needle)
     if (needle.length > haystack.length)
         return haystack[$..$];
 outer:
-    for (auto i = 0; i < haystack.length; i++)
+    for (auto i = 0; i < haystack.length-needle.length; i++)
     {
         if (haystack[i] != needle[0])
             continue;
-        for (size_t j = (i+1 < haystack.length) ? i+1 : i, k = 1; k < needle.length; ++j, ++k)
+        for (size_t j = i+1, k = 1; k < needle.length; ++j, ++k)
             if (haystack[j] != needle[k])
                 continue outer;
         return haystack[i..$];
     }
-    return haystack[$..$];
+    return haystack[$ .. $];
 }
 
 T[] andrei_find(T)(T[] haystack, T[] needle)
