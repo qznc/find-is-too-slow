@@ -68,12 +68,12 @@ T[] andrei_find(T)(T[] haystack, T[] needle)
 }
 
 
-immutable LETTERS = "abcdefghijklmnopqrstuvwxyz";
-immutable NEEDLE_LETTERS = "abc";
+immutable LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+immutable NEEDLE_LETTERS = "abcdefghijk";
 
 string generate(long n, string alphabet, uint seed)
 {
-    auto rnd = Xorshift(seed);
+    auto rnd = Random(seed);
     string res;
     foreach(d; 0..n) {
         res ~= alphabet[uniform(0,$,rnd)];
@@ -87,10 +87,12 @@ auto singleRun(int seed)
     auto haystack_length = uniform(10,10000,rnd);
     auto needle_length = uniform(2,20,rnd);
     auto alphabet_length = uniform(1, LETTERS.length, rnd);
+    auto needle_alphabet_length = uniform(1, NEEDLE_LETTERS.length, rnd);
     auto alphabet = LETTERS[0 .. alphabet_length];
+    auto needle_alphabet = NEEDLE_LETTERS[0 .. needle_alphabet_length];
     string haystack = generate(haystack_length, alphabet, rnd.front);
     rnd.popFront();
-    string needle   = generate(needle_length, NEEDLE_LETTERS, rnd.front);
+    string needle   = generate(needle_length, needle_alphabet, rnd.front);
     //writefln("RUN h=%d n=%d a=%d", haystack_length, needle_length, alphabet_length);
 
     // actual benchmarking
@@ -161,19 +163,34 @@ void manyRuns(long n)
 
     // MADs
     long[] mads;
+    long[] plus_dev, sub_dev, plus_c, sub_c;
     foreach(i; 0..results.length) {
         long mad;
         long avg = averages[i];
+        long plus_sum, plus_count, sub_sum, sub_count;
         foreach(x; results[i]) {
+            auto diff = x - avg;
+            if (diff > 0) {
+                plus_sum += diff;
+                plus_count += 1;
+            } else if (diff < 0) {
+                sub_sum += diff;
+                sub_count += 1;
+            }
             mad += abs(x - avg);
         }
         mad /= results[i].length;
         mads ~= mad;
+        plus_dev ~= plus_sum / plus_count;
+        plus_c ~= plus_count;
+        sub_dev ~= sub_sum / sub_count;
+        sub_c ~= sub_count;
     }
 
     // print
     foreach(i; 0 .. averages.length) {
-        writefln("%12s:\t%3d ±%d", names[i], averages[i], mads[i]);
+        writefln("%12s: %3d ±%-3d  %+4d (%4d) %4d (%4d)", names[i], averages[i], mads[i],
+            plus_dev[i], plus_c[i], sub_dev[i], sub_c[i]);
     }
     writeln(" (avg slowdown vs fastest; absolute deviation)");
 }
