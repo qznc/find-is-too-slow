@@ -131,7 +131,7 @@ auto singleRun(int seed)
     }
 
     // normalize
-    auto m = min(res[0].length, res[1].length, res[2].length, res[3].length);
+    auto m = min(res[0].length, res[1].length, res[2].length, res[3].length, res[4].length);
     return [
         100 * res[0].length / m,
         100 * res[1].length / m,
