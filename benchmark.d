@@ -6,6 +6,7 @@ import std.conv : to;
 import std.algorithm : sum, min;
 import std.math : abs;
 import std.array;
+import core.cpuid;
 
 bool halt_on_error = false;
 bool verbose_errors = false;
@@ -211,4 +212,5 @@ void main(string[] args)
     }
 
     manyRuns(iterations);
+    writeln("CPU ID: ", vendor(), " ", processor());
 }
