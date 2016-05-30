@@ -11,7 +11,7 @@ import core.cpuid;
 bool halt_on_error = false;
 bool verbose_errors = false;
 
-string[] names = ["std find", "manual find", "qznc find", "Chris find", "Andrei find"];
+string[] names = ["std", "manual", "qznc", "Chris", "Andrei"];
 
 string manual_find(string haystack, string needle) {
     size_t i=0;
@@ -189,7 +189,7 @@ void manyRuns(long n)
 
     // print
     foreach(i; 0 .. averages.length) {
-        writefln("%12s: %3d ±%-3d  %+4d (%4d) %4d (%4d)", names[i], averages[i], mads[i],
+        writefln("%10s: %3d ±%-3d  %+4d (%4d) %4d (%4d)", names[i], averages[i], mads[i],
             plus_dev[i], plus_c[i], sub_dev[i], sub_c[i]);
     }
     writeln(" (avg slowdown vs fastest; absolute deviation)");
