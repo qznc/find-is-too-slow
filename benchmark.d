@@ -35,7 +35,7 @@ string findStringS_Manual(string haystack, string needle)
     if (needle.length > haystack.length)
         return haystack[$..$];
 outer:
-    for (auto i = 0; i < haystack.length-needle.length; i++)
+    for (auto i = 0; i < haystack.length-(needle.length-1); i++)
     {
         if (haystack[i] != needle[0])
             continue;
