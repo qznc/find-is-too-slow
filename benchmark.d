@@ -3,7 +3,7 @@ import std.random;
 import std.getopt;
 import std.datetime : benchmark, Duration;
 import std.conv : to;
-import std.algorithm : sum, min;
+import std.algorithm : sum, min, canFind;
 import std.math : abs;
 import std.array;
 import core.cpuid;
@@ -130,6 +130,27 @@ auto runRandom(int seed)
     string haystack = generate(haystack_length, alphabet, rnd.front);
     rnd.popFront();
     string needle   = generate(needle_length, needle_alphabet, rnd.front);
+
+    return doBenchmark(haystack, needle);
+}
+
+auto runRandomLong(int seed)
+{
+    auto rnd = Random(seed);
+    auto haystack_length = [1000,10_000,100_000,1_000_000][uniform(0,3,rnd)];
+    auto needle_length = uniform(50,500,rnd);
+    auto haystack_alphabet_length = uniform(1, LETTERS.length, rnd);
+    auto needle_alphabet_length = uniform(1, LETTERS.length, rnd);
+    auto alphabet = LETTERS[0 .. haystack_alphabet_length];
+    auto needle_alphabet = LETTERS[0 .. needle_alphabet_length];
+    string haystack = generate(haystack_length, alphabet, rnd.front);
+    rnd.popFront();
+    string needle = generate(needle_length, needle_alphabet, rnd.front);
+
+    /* make needle always mismatch */
+    auto mismatch_index = uniform(1,needle_length,rnd);
+    assert (!canFind(needle_alphabet, '+'));
+    needle = needle[0..mismatch_index] ~ '+' ~ needle[mismatch_index..$];
 
     return doBenchmark(haystack, needle);
 }
@@ -295,7 +316,9 @@ void main(string[] args)
     writeln("Search in Alice in Wonderland");
     manyRuns(iterations, &runAlice);
     writeln("Search in random short strings");
-    manyRuns(iterations, &runRandomShort);
+    manyRuns(iterations*10, &runRandomShort);
+    writeln("Mismatch in random long strings");
+    manyRuns(iterations/5, &runRandomLong);
     writeln("Search random haystack with random needle");
     manyRuns(iterations, &runRandom);
     writeln(" (avg slowdown vs fastest; absolute deviation)");
