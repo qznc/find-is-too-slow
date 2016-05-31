@@ -134,6 +134,22 @@ auto runRandom(int seed)
     return doBenchmark(haystack, needle);
 }
 
+auto runRandomShort(int seed)
+{
+    auto rnd = Random(seed);
+    auto haystack_length = uniform(10,300,rnd);
+    auto needle_length = uniform(2,10,rnd);
+    auto haystack_alphabet_length = uniform(10, LETTERS.length, rnd);
+    auto needle_alphabet_length = uniform(1, LETTERS.length, rnd);
+    auto alphabet = LETTERS[0 .. haystack_alphabet_length];
+    auto needle_alphabet = LETTERS[0 .. needle_alphabet_length];
+    string haystack = generate(haystack_length, alphabet, rnd.front);
+    rnd.popFront();
+    string needle   = generate(needle_length, needle_alphabet, rnd.front);
+
+    return doBenchmark(haystack, needle);
+}
+
 auto runAlice(int seed)
 {
     import std.file : read;
@@ -278,6 +294,8 @@ void main(string[] args)
 
     writeln("Search in Alice in Wonderland");
     manyRuns(iterations, &runAlice);
+    writeln("Search in random short strings");
+    manyRuns(iterations, &runRandomShort);
     writeln("Search random haystack with random needle");
     manyRuns(iterations, &runRandom);
     writeln(" (avg slowdown vs fastest; absolute deviation)");
