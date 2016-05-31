@@ -11,7 +11,7 @@ import core.cpuid;
 bool halt_on_error = false;
 bool verbose_errors = false;
 
-string[] names = ["std", "manual", "qznc", "Chris", "Andrei"];
+string[] names = ["std", "manual", "qznc", "Chris", "Andrei", "Andrei2"];
 
 string manual_find(string haystack, string needle) {
     size_t i=0;
@@ -68,6 +68,42 @@ T[] andrei_find(T)(T[] haystack, T[] needle)
     return haystack[$ .. $];
 }
 
+T[] andrei_find2(T)(T[] haystack, T[] needle)
+{
+    static size_t computeSkip(T[] needle)
+    {
+        size_t result = 1;
+        while (result < needle.length && needle[$ - 1 - result] != needle[$ - 1])
+        {
+            ++result;
+        }
+        return result;
+    }
+
+    if (needle.length == 0) return haystack;
+    immutable lastIndex = needle.length - 1;
+    auto last = needle[lastIndex];
+    size_t j = lastIndex, skip = 0;
+    for (; j < haystack.length;)
+    {
+        if (haystack[j] != last)
+        {
+            ++j;
+            continue;
+        }
+        immutable k = j - lastIndex;
+        // last elements match
+        for (size_t i = 0; ; ++i)
+        {
+            if (i == lastIndex) return haystack[k .. $];
+            if (needle[i] != haystack[k + i]) break;
+        }
+        if (skip == 0) skip = computeSkip(needle);
+        j += skip;
+    }
+    return haystack[$ .. $];
+}
+
 
 immutable LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -109,6 +145,8 @@ auto singleRun(int seed)
         results ~= findStringS_Manual(haystack, needle);
     },{
         results ~= andrei_find(haystack, needle);
+    },{
+        results ~= andrei_find2(haystack, needle);
     })(1);
 
     { // Correctness check
@@ -131,13 +169,14 @@ auto singleRun(int seed)
     }
 
     // normalize
-    auto m = min(res[0].length, res[1].length, res[2].length, res[3].length, res[4].length);
+    auto m = min(res[0].length, res[1].length, res[2].length, res[3].length, res[4].length, res[5].length);
     return [
         100 * res[0].length / m,
         100 * res[1].length / m,
         100 * res[2].length / m,
         100 * res[3].length / m,
-        100 * res[4].length / m];
+        100 * res[4].length / m,
+        100 * res[5].length / m];
 }
 
 void manyRuns(long n)
