@@ -117,7 +117,7 @@ string generate(long n, string alphabet, uint seed)
     return res;
 }
 
-auto singleRun(int seed)
+auto runRandom(int seed)
 {
     auto rnd = Random(seed);
     auto haystack_length = uniform(10,10000,rnd);
@@ -129,8 +129,21 @@ auto singleRun(int seed)
     string haystack = generate(haystack_length, alphabet, rnd.front);
     rnd.popFront();
     string needle   = generate(needle_length, needle_alphabet, rnd.front);
-    //writefln("RUN h=%d n=%d a=%d", haystack_length, needle_length, alphabet_length);
 
+    return doBenchmark(haystack, needle);
+}
+
+auto runAlice(int seed)
+{
+    import std.file : read;
+    string haystack = cast(string) read("alice.txt");
+    string needle   = "find a pleasure in all their simple joys";
+
+    return doBenchmark(haystack, needle);
+}
+
+auto doBenchmark(string haystack, string needle)
+{
     // actual benchmarking
     string[] results;
     auto res = benchmark!({
@@ -169,7 +182,7 @@ auto singleRun(int seed)
     }
 
     // normalize
-    auto m = min(res[0].length, res[1].length, res[2].length, res[3].length, res[4].length, res[5].length);
+    long m = min(res[0].length, res[1].length, res[2].length, res[3].length, res[4].length, res[5].length);
     return [
         100 * res[0].length / m,
         100 * res[1].length / m,
@@ -179,13 +192,13 @@ auto singleRun(int seed)
         100 * res[5].length / m];
 }
 
-void manyRuns(long n)
+void manyRuns(long n, long[] function(int) gen)
 {
     // measure
     auto rnd = Random();
     long[][] results;
     foreach(i; 0..n) {
-        auto res = singleRun(rnd.front);
+        auto res = gen(rnd.front);
         //writeln(res);
         rnd.popFront();
         results.length = res.length;
@@ -197,6 +210,7 @@ void manyRuns(long n)
     // averages
     long[] averages;
     foreach(i; 0..results.length) {
+        assert (results[i].length);
         averages ~= results[i].sum / results[i].length;
     }
 
@@ -218,11 +232,20 @@ void manyRuns(long n)
             }
             mad += abs(x - avg);
         }
-        mad /= results[i].length;
+        if (results[i].length == 0)
+            mad = -1;
+        else
+            mad /= results[i].length;
         mads ~= mad;
-        plus_dev ~= plus_sum / plus_count;
+        if (plus_count == 0)
+            plus_dev ~= -1;
+        else
+            plus_dev ~= plus_sum / plus_count;
         plus_c ~= plus_count;
-        sub_dev ~= sub_sum / sub_count;
+        if (sub_count == 0)
+            sub_dev ~= -1;
+        else
+            sub_dev ~= sub_sum / sub_count;
         sub_c ~= sub_count;
     }
 
@@ -231,12 +254,11 @@ void manyRuns(long n)
         writefln("%10s: %3d ±%-3d  %+4d (%4d) %4d (%4d)", names[i], averages[i], mads[i],
             plus_dev[i], plus_c[i], sub_dev[i], sub_c[i]);
     }
-    writeln(" (avg slowdown vs fastest; absolute deviation)");
 }
 
 void main(string[] args)
 {
-    uint iterations = 10000;
+    uint iterations = 1000;
     auto helpInformation = getopt(args,
         "iterations|i"  ,"number of iterations per run" ,&iterations,
         "halt-on-error" ,"stop benchmarking if any result is wrong" ,&halt_on_error,
@@ -250,6 +272,10 @@ void main(string[] args)
         return;
     }
 
-    manyRuns(iterations);
+    writeln("Search in Alice in Wonderland");
+    manyRuns(iterations, &runAlice);
+    writeln("Search random haystack with random needle");
+    manyRuns(iterations, &runRandom);
+    writeln(" (avg slowdown vs fastest; absolute deviation)");
     writeln("CPU ID: ", vendor(), " ", processor());
 }
