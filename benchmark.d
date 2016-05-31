@@ -10,6 +10,7 @@ import core.cpuid;
 
 bool halt_on_error = false;
 bool verbose_errors = false;
+bool more_statistics = false;
 
 string[] names = ["std", "manual", "qznc", "Chris", "Andrei", "Andrei2"];
 
@@ -251,8 +252,10 @@ void manyRuns(long n, long[] function(int) gen)
 
     // print
     foreach(i; 0 .. averages.length) {
-        writefln("%10s: %3d ±%-3d  %+4d (%4d) %4d (%4d)", names[i], averages[i], mads[i],
-            plus_dev[i], plus_c[i], sub_dev[i], sub_c[i]);
+        if (more_statistics)
+            writefln("%10s: %3d ±%-3d  %+4d (%4d) %4d (%4d)", names[i], averages[i], mads[i], plus_dev[i], plus_c[i], sub_dev[i], sub_c[i]);
+        else
+            writefln("%10s: %3d ±%-3d", names[i], averages[i], mads[i]);
     }
 }
 
@@ -263,6 +266,7 @@ void main(string[] args)
         "iterations|i"  ,"number of iterations per run" ,&iterations,
         "halt-on-error" ,"stop benchmarking if any result is wrong" ,&halt_on_error,
         "verbose-errors","show some debugging output if any result is wrong" ,&verbose_errors,
+        "more-statistics","show more numbers" ,&more_statistics,
     );
     if (helpInformation.helpWanted)
     {
