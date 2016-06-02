@@ -12,7 +12,7 @@ bool halt_on_error = false;
 bool verbose_errors = false;
 bool more_statistics = false;
 
-string[] names = ["std", "manual", "qznc", "Chris", "Andrei", "Andrei2"];
+string[] names = ["std", "manual", "A2Phobos", "Chris", "Andrei", "Andrei2"];
 
 string manual_find(string haystack, string needle) {
     size_t i=0;
