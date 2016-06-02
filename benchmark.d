@@ -71,16 +71,6 @@ T[] andrei_find(T)(T[] haystack, T[] needle)
 
 T[] andrei_find2(T)(T[] haystack, T[] needle)
 {
-    static size_t computeSkip(T[] needle)
-    {
-        size_t result = 1;
-        while (result < needle.length && needle[$ - 1 - result] != needle[$ - 1])
-        {
-            ++result;
-        }
-        return result;
-    }
-
     if (needle.length == 0) return haystack;
     immutable lastIndex = needle.length - 1;
     auto last = needle[lastIndex];
@@ -99,7 +89,14 @@ T[] andrei_find2(T)(T[] haystack, T[] needle)
             if (i == lastIndex) return haystack[k .. $];
             if (needle[i] != haystack[k + i]) break;
         }
-        if (skip == 0) skip = computeSkip(needle);
+        if (skip == 0)
+        {
+            skip = 1;
+            while (skip < needle.length && needle[$ - 1 - skip] != needle[$ - 1])
+            {
+                ++skip;
+            }
+        }
         j += skip;
     }
     return haystack[$ .. $];
