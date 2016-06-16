@@ -12,7 +12,7 @@ bool halt_on_error = false;
 bool verbose_errors = false;
 bool more_statistics = false;
 
-string[] names = ["std", "manual", "A2Phobos", "Chris", "Andrei", "Andrei2"];
+string[] names = ["std", "manual", "A2Phobos", "Chris", "Andrei", "Andrei2", "memmem"];
 
 string manual_find(string haystack, string needle) {
     size_t i=0;
@@ -102,6 +102,14 @@ T[] andrei_find2(T)(T[] haystack, T[] needle)
     return haystack[$ .. $];
 }
 
+extern (C) void *memmem(const void *haystack, size_t haystacklen, const void *needle, size_t needlelen);
+
+string via_glibc(string haystack, string needle) {
+    void *r = memmem(haystack.ptr, haystack.length, needle.ptr, needle.length);
+    if (r == null) return haystack[$ .. $];
+    long skipped = r - haystack.ptr;
+    return haystack[skipped .. $];
+}
 
 immutable LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -195,6 +203,8 @@ auto doBenchmark(string haystack, string needle)
         results ~= andrei_find(haystack, needle);
     },{
         results ~= andrei_find2(haystack, needle);
+    },{
+        results ~= via_glibc(haystack, needle);
     })(1);
 
     { // Correctness check
@@ -217,14 +227,15 @@ auto doBenchmark(string haystack, string needle)
     }
 
     // normalize
-    long m = min(res[0].length, res[1].length, res[2].length, res[3].length, res[4].length, res[5].length);
+    long m = min(res[0].length, res[1].length, res[2].length, res[3].length, res[4].length, res[5].length, res[6].length);
     return [
         100 * res[0].length / m,
         100 * res[1].length / m,
         100 * res[2].length / m,
         100 * res[3].length / m,
         100 * res[4].length / m,
-        100 * res[5].length / m];
+        100 * res[5].length / m,
+        100 * res[6].length / m];
 }
 
 void manyRuns(long n, long[] function(int) gen)
