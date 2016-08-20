@@ -1778,10 +1778,16 @@ if (isRandomAccessRange!R1 && isBidirectionalRange!R2
     static if (hasLength!R2)
     {
         immutable needleLength = needle.length;
+        immutable lastIndex = needleLength - 1;
+        immutable last = needle[lastIndex];
+		immutable secondlast = needle[lastIndex - 1];
     }
     else
     {
         immutable needleLength = walkLength(needle.save);
+        immutable lastIndex = needleLength - 1;
+        immutable last = needle[lastIndex];
+		immutable secondlast = needle[lastIndex - 1];
     }
     if (needleLength > haystack.length)
     {
@@ -1789,34 +1795,30 @@ if (isRandomAccessRange!R1 && isBidirectionalRange!R2
     }
     static if (isRandomAccessRange!R2)
     {
-        immutable lastIndex = needleLength - 1;
-        auto last = needle[lastIndex];
-        size_t j = lastIndex, skip = 0;
-        for (; j < haystack.length;)
+        size_t skip = 1;
+        while (skip < needleLength && needle[needleLength - 1 - skip] != last)
         {
-            if (!binaryFun!pred(haystack[j], last))
-            {
-                ++j;
-                continue;
-            }
-            immutable k = j - lastIndex;
-            // last elements match
-            for (size_t i = 0;; ++i)
-            {
-                if (i == lastIndex)
-                    return haystack[k .. haystack.length];
-                if (!binaryFun!pred(haystack[k + i], needle[i]))
-                    break;
-            }
-            if (skip == 0) {
-                skip = 1;
-                while (skip < needleLength && needle[needleLength - 1 - skip] != needle[needleLength - 1])
-                {
-                    ++skip;
-                }
-            }
-            j += skip;
+          ++skip;
         }
+		size_t j = lastIndex;
+
+loop:	while( j < haystack.length ) {
+            if (!binaryFun!pred(haystack[j], last)) {
+				++j;
+				continue;
+			}
+   		    immutable k = j - lastIndex;
+   		    // last elements match
+   		    for (size_t i = lastIndex; i;) {
+   				if (!binaryFun!pred(haystack[k + i - 1], needle[i - 1])) {
+					j += skip;
+					goto loop;
+				}
+				--i;
+	        }
+			return haystack[k..$];
+        }
+		return haystack[$..$];
     }
     else
     {
