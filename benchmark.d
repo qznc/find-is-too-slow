@@ -102,47 +102,40 @@ T[] andrei_find2(T)(T[] haystack, T[] needle)
     return haystack[$ .. $];
 }
 
-T[] faster_find(T)(T[] haystack, T[] needle)
+T[] faster_find(T)(T[] haystack, T[] needle) pure nothrow
 {
-    if (needle.length == 0) return haystack;
-    immutable lastIndex = needle.length - 1;
-    immutable last = needle[lastIndex];
-	size_t j = needle.length - 1, skip = 0;
-	
-    main_loop: for (; j < haystack.length; ++j)
-    {
-        if (haystack[j] != last) continue;
-		
-        immutable k = j - lastIndex;
-		size_t i = 0;
+    if (needle.length == 0) return haystack[$..$];
+	if (needle.length > haystack.length) return haystack[$..$];
 
-        do {
-            if (needle[i] != haystack[k + i]) {
-				while (skip < needle.length - 1 && needle[$ - 2 - skip] != last) { ++skip; }
+	immutable end = needle.length - 1;
+	size_t j = end, skip = 0;
+	
+    while(++j < haystack.length)
+    {
+        if (haystack[j] != needle[end]) continue;
+		
+        for(size_t i = 1, k = 0; i < needle.length; ++i, ++k) {
+            if (haystack[j - needle.length + i] != needle[k]) {
+				while (skip < end && needle[end - 1 - skip] != needle[end]) { ++skip; }
 				j += skip;
 				goto main_loop2;
 			}
-			++i;
-        } while(i < lastIndex);
-		return haystack[k .. $];
+        }
+		return haystack[j - end .. $];
     }
     return haystack[$ .. $];
 
-	main_loop2: for (; j < haystack.length; ++j)
+	main_loop2: while(++j < haystack.length)
     {
-        if (haystack[j] != last) continue;
+        if (haystack[j] != needle[end]) continue;
 		
-        immutable k = j - lastIndex;
-		size_t i = 0;
-
-        do {
-            if (needle[i] != haystack[k + i]) {
-				j += skip;				
+        for(size_t i = 1, k = 0; i < needle.length; ++i, ++k) {
+            if (haystack[j - needle.length + i] != needle[k]) {
+				j += skip;
 				continue main_loop2;
 			}
-			++i;
-        } while(i < lastIndex);
-		return haystack[k .. $];
+        }
+		return haystack[j - end .. $];
     }
     return haystack[$ .. $];
 }
