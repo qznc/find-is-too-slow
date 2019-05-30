@@ -1790,33 +1790,35 @@ if (isRandomAccessRange!R1 && isBidirectionalRange!R2
     static if (isRandomAccessRange!R2)
     {
         immutable lastIndex = needleLength - 1;
-        auto last = needle[lastIndex];
-        size_t j = lastIndex, skip = 0;
-        for (; j < haystack.length;)
-        {
-            if (!binaryFun!pred(haystack[j], last))
-            {
-                ++j;
-                continue;
-            }
-            immutable k = j - lastIndex;
-            // last elements match
-            for (size_t i = 0;; ++i)
-            {
-                if (i == lastIndex)
-                    return haystack[k .. haystack.length];
-                if (!binaryFun!pred(haystack[k + i], needle[i]))
-                    break;
-            }
-            if (skip == 0) {
-                skip = 1;
-                while (skip < needleLength && needle[needleLength - 1 - skip] != needle[needleLength - 1])
-                {
-                    ++skip;
-                }
-            }
-            j += skip;
+        immutable last = needle[lastIndex];
+
+		size_t j = lastIndex, skip = 0;
+
+loop: while( j < haystack.length ) {
+            if (!binaryFun!pred(haystack[j], last)) {
+				++j;
+				continue;
+			}
+   		    immutable k = j - lastIndex;
+   		    // last elements match
+   		    for (size_t i = lastIndex; i;) {
+   				if (binaryFun!pred(haystack[k + i - 1], needle[i - 1])) {
+					--i;
+					continue;
+				}
+				if (skip == 0) {
+					skip = 1;
+			        while (skip < needleLength && !binaryFun!pred(needle[needleLength - 1 - skip], last))
+			        {
+			          ++skip;
+			        }
+				}
+				j += skip;
+				goto loop;
+	        }
+			return haystack[k..$];
         }
+		return haystack[$..$];
     }
     else
     {

@@ -12,7 +12,7 @@ bool halt_on_error = false;
 bool verbose_errors = false;
 bool more_statistics = false;
 
-string[] names = ["std", "manual", "A2Phobos", "Chris", "Andrei", "Andrei2"];
+string[] names = ["std", "manual", "A2Phobos", "Chris", "Andrei", "Andrei2", "Faster"];
 
 string manual_find(string haystack, string needle) {
     size_t i=0;
@@ -102,6 +102,43 @@ T[] andrei_find2(T)(T[] haystack, T[] needle)
     return haystack[$ .. $];
 }
 
+T[] faster_find(T)(T[] haystack, T[] needle) pure nothrow
+{
+    if (needle.length == 0) return haystack[$..$];
+	if (needle.length > haystack.length) return haystack[$..$];
+
+	immutable end = needle.length - 1;
+	size_t j = end, skip = 0;
+	
+    while(++j < haystack.length)
+    {
+        if (haystack[j] != needle[end]) continue;
+		
+        for(size_t i = 1, k = 0; i < needle.length; ++i, ++k) {
+            if (haystack[j - needle.length + i] != needle[k]) {
+				while (skip < end && needle[end - 1 - skip] != needle[end]) { ++skip; }
+				j += skip;
+				goto main_loop2;
+			}
+        }
+		return haystack[j - end .. $];
+    }
+    return haystack[$ .. $];
+
+	main_loop2: while(++j < haystack.length)
+    {
+        if (haystack[j] != needle[end]) continue;
+		
+        for(size_t i = 1, k = 0; i < needle.length; ++i, ++k) {
+            if (haystack[j - needle.length + i] != needle[k]) {
+				j += skip;
+				continue main_loop2;
+			}
+        }
+		return haystack[j - end .. $];
+    }
+    return haystack[$ .. $];
+}
 
 immutable LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -195,6 +232,8 @@ auto doBenchmark(string haystack, string needle)
         results ~= andrei_find(haystack, needle);
     },{
         results ~= andrei_find2(haystack, needle);
+    },{
+        results ~= faster_find(haystack, needle);
     })(1);
 
     { // Correctness check
@@ -217,14 +256,15 @@ auto doBenchmark(string haystack, string needle)
     }
 
     // normalize
-    long m = min(res[0].length, res[1].length, res[2].length, res[3].length, res[4].length, res[5].length);
+    long m = min(res[0].length, res[1].length, res[2].length, res[3].length, res[4].length, res[5].length, res[6].length);
     return [
         100 * res[0].length / m,
         100 * res[1].length / m,
         100 * res[2].length / m,
         100 * res[3].length / m,
         100 * res[4].length / m,
-        100 * res[5].length / m];
+        100 * res[5].length / m,
+        100 * res[6].length / m];
 }
 
 void manyRuns(long n, long[] function(int) gen)
